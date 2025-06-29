@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración Willi-Vocabulary</title>
+    <link rel="stylesheet" href="thirdparty/bootstrap-5.3.3-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <h1>Panel de Administración</h1>
+
+    <section id="add-word-form">
+        <h2>Agregar nueva palabra</h2>
+        <form id="formAddWord">
+            <input type="text" name="english" placeholder="Palabra en inglés" required>
+             <input type="text" name="spanish" placeholder="Traducción al español" required>
+             <input type="text" name="category" placeholder="Categoría">
+             <input type="text" name="image_url" placeholder="URL de la imagen">
+             <button type="submit">Agregar</button>
+        </form>
+    </section>
+    <section id="word-list">
+        <h2>Lista de palabras</h2>
+        <div id="tableWords"></div>
+    </section>
+    <script src="js/admin.js"></script>
+</body>
+</html>
