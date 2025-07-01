@@ -2,29 +2,53 @@
 
 require_once __DIR__ . '/../daos/db.php';
 
+// Definir la función sendJson si aún no está definida
+if (!function_exists('sendJson')) {
+    function sendJson($data, $code = 200)
+    {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
+}
+
 class ActionDeleteWord
 {
-    public function execute()
+    public function execute($data)
     {
-        if (!isset($_POST['id'])) {
-            echo json_encode([
+        if (!isset($data['id']) || !is_numeric($data['id'])) {
+            sendJson([
                 'success' => false,
-                'message' => 'ID no proporcionado.'
-            ]);
-            return;
+                'message' => 'ID no válido o no proporcionado.'
+            ], 400);
         }
 
-        $id = $_POST['id'];
+        $id = (int)$data['id'];
 
         $database = new DatabaseController();
         $db = $database->getConnection();
 
-        $stmt = $db->prepare("DELETE FROM words WHERE id = ?");
-        $ok = $stmt->execute([$id]);
+        try {
+            $stmt = $db->prepare("DELETE FROM words WHERE id = ?");
+            $ok = $stmt->execute([$id]);
 
-        echo json_encode([
-            'success' => $ok,
-            'message' => $ok ? 'Palabra eliminada correctamente.' : 'Error al eliminar la palabra.'
-        ]);
+            if ($ok && $stmt->rowCount() > 0) {
+                sendJson([
+                    'success' => true,
+                    'message' => 'Palabra eliminada correctamente.'
+                ]);
+            } else {
+                sendJson([
+                    'success' => false,
+                    'message' => 'No se encontró la palabra o no se pudo eliminar.'
+                ], 404);
+            }
+        } catch (PDOException $e) {
+            sendJson([
+                'success' => false,
+                'message' => 'Error en la base de datos: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

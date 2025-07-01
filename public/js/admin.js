@@ -1,13 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("formAddWord");
     const tableWords = document.getElementById("tableWords");
+    const categorySelect = form.querySelector("select[name='category']");
 
-    loadWords();
+    cargarNavbarYFooter();
+    cargarCategorias();
+    cargarPalabras();
 
-    // Crear o editar
-    form.addEventListener("submit", function (e) {
+    form.addEventListener("submit", e => {
         e.preventDefault();
         const formData = new FormData(form);
+
         const action = form.dataset.editing === "true" ? "editWord" : "addWord";
         if (action === "editWord") {
             formData.append("id", form.dataset.wordId);
@@ -19,32 +22,59 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(res => res.json())
             .then(data => {
+                alert(data.message);
                 if (data.success) {
-                    alert(data.message);
                     form.reset();
                     form.dataset.editing = "false";
-                    loadWords();
-                } else {
-                    alert("Error: " + data.message);
+                    delete form.dataset.wordId;
+                    cargarPalabras();
                 }
-            });
+            })
+            .catch(err => console.error("Error en envío:", err));
     });
 
-    // Leer palabras
-    function loadWords() {
+    function cargarNavbarYFooter() {
+        fetch("parts/navbar.html")
+            .then(res => res.text())
+            .then(html => document.getElementById("navbar").innerHTML = html);
+        fetch("parts/footer.html")
+            .then(res => res.text())
+            .then(html => document.getElementById("footer").innerHTML = html);
+    }
+
+    function cargarCategorias() {
+        fetch("../server/controller/Controller.php?action=getCategories")
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    categorySelect.innerHTML = `<option value="">Seleccionar categoría</option>`;
+                    data.forEach(cat => {
+                        const option = document.createElement("option");
+                        option.value = cat.name;
+                        option.textContent = cat.name;
+                        categorySelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Error cargando categorías:", err);
+                categorySelect.innerHTML = `<option value="">(Error al cargar)</option>`;
+            });
+    }
+
+    function cargarPalabras() {
         fetch("../server/controller/Controller.php?action=getWords")
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    renderWords(data);
+                    renderizarTabla(data);
                 } else {
                     tableWords.innerHTML = "<p>No se pudieron cargar las palabras.</p>";
                 }
             });
     }
 
-    // Renderizar tabla
-    function renderWords(words) {
+    function renderizarTabla(words) {
         if (words.length === 0) {
             tableWords.innerHTML = "<p>No hay palabras registradas.</p>";
             return;
@@ -63,49 +93,58 @@ document.addEventListener("DOMContentLoaded", () => {
             <tbody>`;
 
         words.forEach(word => {
-            html += `<tr>
+            html += `<tr data-id="${word.id}"
+                         data-english="${word.english}"
+                         data-spanish="${word.spanish}"
+                         data-category="${word.category}">
                 <td>${word.english}</td>
                 <td>${word.spanish}</td>
                 <td>${word.category}</td>
                 <td><img src="${word.image_url}" style="width:60px;"></td>
                 <td>
-                    <button class="btn btn-sm btn-warning" onclick="editWord(${encodeURIComponent(JSON.stringify(word))})">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteWord(${word.id})">Eliminar</button>
+                    <button class="btn btn-sm btn-warning btn-edit">Editar</button>
+                    <button class="btn btn-sm btn-danger btn-delete">Eliminar</button>
                 </td>
             </tr>`;
         });
 
         html += "</tbody></table>";
         tableWords.innerHTML = html;
-    }
 
-    // Eliminar palabra
-    window.deleteWord = function (id) {
-        if (!confirm("¿Seguro que deseas eliminar esta palabra?")) return;
+        // Asignar eventos
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", e => {
+                const row = e.target.closest("tr");
+                form.querySelector("input[name='english']").value = row.dataset.english;
+                form.querySelector("input[name='spanish']").value = row.dataset.spanish;
+                form.querySelector("select[name='category']").value = row.dataset.category;
 
-        const formData = new FormData();
-        formData.append("id", id);
-
-        fetch("../server/controller/Controller.php?action=deleteWord", {
-            method: "POST",
-            body: formData
-        })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message);
-                loadWords();
+                form.dataset.editing = "true";
+                form.dataset.wordId = row.dataset.id;
             });
-    };
+        });
 
-    // Editar palabra (rellena el formulario)
-    window.editWord = function (wordJSON) {
-        const word = JSON.parse(wordJSON);
-        document.getElementById("english").value = word.english;
-        document.getElementById("spanish").value = word.spanish;
-        document.getElementById("category").value = word.category;
-        document.getElementById("image_url").value = word.image_url;
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", e => {
+                const row = e.target.closest("tr");
+                const id = row.dataset.id;
 
-        form.dataset.editing = "true";
-        form.dataset.wordId = word.id;
-    };
+                if (!confirm("¿Seguro que deseas eliminar esta palabra?")) return;
+
+                const formData = new FormData();
+                formData.append("id", id);
+
+                fetch("../server/controller/Controller.php?action=deleteWord", {
+                    method: "POST",
+                    body: formData
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                        cargarPalabras();
+                    })
+                    .catch(err => console.error("Error eliminando palabra:", err));
+            });
+        });
+    }
 });

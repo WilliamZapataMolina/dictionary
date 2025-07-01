@@ -3,6 +3,15 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Función reutilizable para enviar respuestas JSON
+function sendJson($data, $code = 200)
+{
+    http_response_code($code);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
 $action = $_GET['action'] ?? $_POST['action'] ?? null;
 
 $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
@@ -19,31 +28,44 @@ require_once __DIR__ . '/ActionDeleteWord.php';
 switch ($action) {
     case 'login':
         try {
-            $loginAction = new ActionLogin();
-            $loginAction->execute($_POST);
+            (new ActionLogin())->execute($_POST);
         } catch (Exception $e) {
-            http_response_code(500);
-            echo $isAjax ? json_encode(['error' => $e->getMessage()]) : 'Error al iniciar sesión.';
+            $message = $isAjax
+                ? ['error' => $e->getMessage()]
+                : 'Error al iniciar sesión.';
+            sendJson($message, 500);
         }
         break;
-    case 'logout':
 
+    case 'logout':
+        (new ActionLogout())->execute();
         break;
-    case 'get_word':
-        (new ActionGetWord())->execute();
+
+    case 'getWord':
+        try {
+            (new ActionGetWord())->execute();
+        } catch (Exception $e) {
+            $message = $isAjax
+                ? ['error' => $e->getMessage()]
+                : 'Error en getWords.';
+            sendJson($message, 500);
+        }
         break;
-    case 'add_word':
+
+    case 'addWord':
         (new ActionAddWord())->execute($_POST);
         break;
-    case 'update_word':
+
+    case 'updateWord':
         (new ActionUpdateWord())->execute($_POST);
         break;
-    case 'delete_word':
+
+    case 'deleteWord':
         (new ActionDeleteWord())->execute($_POST);
         break;
+
     default:
-        http_response_code(400);
         $message = ['error' => 'Acción no válida'];
-        echo $isAjax ? json_encode($message) : 'Acción no válida';
+        sendJson($message, 400);
         break;
 }
