@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../daos/db.php';
 
-// Definir la función si no está disponible (por si no se usa desde Controller.php directamente)
 if (!function_exists('sendJson')) {
     function sendJson($data, $code = 200)
     {
@@ -17,8 +16,7 @@ class ActionUpdateWord
 {
     public function execute($data)
     {
-        // Validar campos requeridos
-        $requiredFields = ['id', 'english', 'spanish', 'category', 'image_url'];
+        $requiredFields = ['id', 'word_in', 'meaning', 'category_id', 'file_id'];
         foreach ($requiredFields as $field) {
             if (empty($data[$field])) {
                 sendJson([
@@ -28,17 +26,16 @@ class ActionUpdateWord
             }
         }
 
-        $database = new DatabaseController();
-        $db = $database->getConnection();
-
-        $stmt = $db->prepare("UPDATE words SET english = ?, spanish = ?, category = ?, image_url = ? WHERE id = ?");
-
         try {
+            $database = new DatabaseController();
+            $db = $database->getConnection();
+
+            $stmt = $db->prepare("UPDATE words SET word_in = ?, meaning = ?, category_id = ?, file_id = ? WHERE id = ?");
             $ok = $stmt->execute([
-                trim($data['english']),
-                trim($data['spanish']),
-                trim($data['category']),
-                trim($data['image_url']),
+                trim($data['word_in']),
+                trim($data['meaning']),
+                (int)$data['category_id'],
+                (int)$data['file_id'],
                 (int)$data['id']
             ]);
 

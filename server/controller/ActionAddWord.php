@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../daos/db.php';
 
-// Asegúrate de que esta función esté disponible si no se usa Controller.php directamente
 if (!function_exists('sendJson')) {
     function sendJson($data, $code = 200)
     {
@@ -17,8 +16,9 @@ class ActionAddWord
 {
     public function execute($data)
     {
-        // Validar campos requeridos
-        $requiredFields = ['english', 'spanish', 'category', 'image_url'];
+        $requiredFields = ['word_in', 'meaning', 'category_id'];
+        file_put_contents(__DIR__ . '/../debug_addword.log', print_r($data, true));
+
         foreach ($requiredFields as $field) {
             if (empty($data[$field])) {
                 sendJson([
@@ -28,20 +28,49 @@ class ActionAddWord
             }
         }
 
-        // Conexión a la base de datos
         $database = new DatabaseController();
         $db = $database->getConnection();
 
-        // Preparar consulta
-        $stmt = $db->prepare("INSERT INTO words (english, spanish, category, image_url) VALUES (?, ?, ?, ?)");
+        $file_id = null;
 
         try {
+            $db->beginTransaction();
+
+            if (!empty($data['file_path']) && strtolower(trim($data['file_path'])) !== 'undefined') {
+                $path = trim($data['file_path']);
+
+                $extension = pathinfo($path, PATHINFO_EXTENSION);
+                $name = pathinfo($path, PATHINFO_FILENAME);
+
+                // Buscar si ya existe la ruta en la tabla files
+                $stmt = $db->prepare("SELECT id FROM files WHERE path = ?");
+                $stmt->execute([$path]);
+                $existingFile = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($existingFile) {
+                    $file_id = $existingFile['id'];
+                } else {
+                    // Insertar en la tabla files
+                    $stmt = $db->prepare("INSERT INTO files (name, extension, path) VALUES (?, ?, ?)");
+                    $stmt->execute([$name, $extension, $path]);
+                    $file_id = $db->lastInsertId();
+                }
+            }
+
+            // Insertar en tabla words
+            $stmt = $db->prepare("
+                INSERT INTO words (word_in, meaning, date_register, category_id, file_id)
+                VALUES (?, ?, NOW(), ?, ?)
+            ");
+
             $ok = $stmt->execute([
-                trim($data['english']),
-                trim($data['spanish']),
-                trim($data['category']),
-                trim($data['image_url'])
+                trim($data['word_in']),
+                trim($data['meaning']),
+                (int)$data['category_id'],
+                $file_id
             ]);
+
+            $db->commit();
 
             if ($ok) {
                 sendJson([
@@ -51,10 +80,11 @@ class ActionAddWord
             } else {
                 sendJson([
                     'success' => false,
-                    'message' => 'Error al agregar palabra.'
+                    'message' => 'Error al insertar palabra.'
                 ], 500);
             }
         } catch (PDOException $e) {
+            $db->rollBack();
             sendJson([
                 'success' => false,
                 'message' => 'Error en la base de datos: ' . $e->getMessage()

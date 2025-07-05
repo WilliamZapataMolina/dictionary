@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../daos/db.php';
 
-// Definir la función sendJson si aún no está definida
 if (!function_exists('sendJson')) {
     function sendJson($data, $code = 200)
     {
@@ -17,33 +16,19 @@ class ActionGetWord
 {
     public function execute()
     {
-        $database = new DatabaseController();
-        $db = $database->getConnection();
+        $db = (new DatabaseController())->getConnection();
 
-        try {
-            $stmt = $db->prepare("
-                SELECT 
-                    w.id, 
-                    w.english, 
-                    w.spanish, 
-                    w.category, 
-                    f.path AS image_url
-                FROM words w
-                LEFT JOIN files f ON w.file_id = f.id
-            ");
-            $stmt->execute();
+        $sql = "
+            SELECT w.word_in, w.meaning, c.name AS category, f.path AS image_url, w.id, w.category_id
+            FROM words w
+            JOIN categories c ON w.category_id = c.id
+            LEFT JOIN files f ON w.file_id = f.id
+            ORDER BY w.id DESC
+        ";
 
-            $words = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $db->query($sql);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            sendJson([
-                'success' => true,
-                'data' => $words
-            ]);
-        } catch (PDOException $e) {
-            sendJson([
-                'success' => false,
-                'message' => 'Error al obtener las palabras: ' . $e->getMessage()
-            ], 500);
-        }
+        sendJson($result);
     }
 }

@@ -46,7 +46,7 @@ class ActionLogin
                 }
 
                 $redirectUrl = $user['rol'] === 'Admin'
-                    ? '/dictionary/public/adminPanel.html'
+                    ? '/dictionary/public/adminPanel.php'
                     : '/dictionary/public/index.html';
 
                 if ($this->isFetchRequest()) {

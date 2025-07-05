@@ -21,6 +21,8 @@ require_once __DIR__ . '/../daos/db.php';
 require_once __DIR__ . '/ActionLogin.php';
 require_once __DIR__ . '/ActionLogout.php';
 require_once __DIR__ . '/ActionGetWord.php';
+require_once __DIR__ . '/ActionGetCategories.php';
+require_once __DIR__ . '/ActionGetImages.php';
 require_once __DIR__ . '/ActionAddWord.php';
 require_once __DIR__ . '/ActionUpdateWord.php';
 require_once __DIR__ . '/ActionDeleteWord.php';
@@ -47,17 +49,47 @@ switch ($action) {
         } catch (Exception $e) {
             $message = $isAjax
                 ? ['error' => $e->getMessage()]
-                : 'Error en getWords.';
+                : 'Error en getWord.';
+            sendJson($message, 500);
+        }
+        break;
+    case 'getCategories':
+        try {
+            (new ActionGetCategories())->execute();
+        } catch (Exception $e) {
+            sendJson(['error' => 'Error al obtener categorías: ' . $e->getMessage()], 500);
+        }
+        break;
+
+    case 'getImages':
+        try {
+            (new ActionGetImages())->execute();
+        } catch (Exception $e) {
+            sendJson(['error' => 'Error al obtener imágenes: ' . $e->getMessage()], 500);
+        }
+        break;
+
+
+    case 'addWord':
+        try {
+            (new ActionAddWord())->execute($_POST);
+        } catch (Exception $e) {
+            $message = $isAjax
+                ? ['error' => $e->getMessage()]
+                : 'Error en getWord.';
             sendJson($message, 500);
         }
         break;
 
-    case 'addWord':
-        (new ActionAddWord())->execute($_POST);
-        break;
-
     case 'updateWord':
-        (new ActionUpdateWord())->execute($_POST);
+        try {
+            (new ActionUpdateWord())->execute($_POST);
+        } catch (Exception $e) {
+            $message = $isAjax
+                ? ['error' => $e->getMessage()]
+                : 'Error en getWord.';
+            sendJson($message, 500);
+        }
         break;
 
     case 'deleteWord':
