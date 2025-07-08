@@ -1,4 +1,5 @@
 <?php
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -22,10 +23,14 @@ require_once __DIR__ . '/ActionLogin.php';
 require_once __DIR__ . '/ActionLogout.php';
 require_once __DIR__ . '/ActionGetWord.php';
 require_once __DIR__ . '/ActionGetCategories.php';
+require_once __DIR__ . '/ActionGetCategoriesWithImages.php';
 require_once __DIR__ . '/ActionGetImages.php';
 require_once __DIR__ . '/ActionAddWord.php';
 require_once __DIR__ . '/ActionUpdateWord.php';
+require_once __DIR__ . '/ActionSearchWord.php';
 require_once __DIR__ . '/ActionDeleteWord.php';
+require_once __DIR__ . '/ActionCountWordsWithImages.php';
+
 
 switch ($action) {
     case 'login':
@@ -53,11 +58,20 @@ switch ($action) {
             sendJson($message, 500);
         }
         break;
+
     case 'getCategories':
         try {
             (new ActionGetCategories())->execute();
         } catch (Exception $e) {
             sendJson(['error' => 'Error al obtener categorías: ' . $e->getMessage()], 500);
+        }
+        break;
+
+    case 'getCategoriesWithImages':
+        try {
+            (new ActionGetCategoriesWithImages())->execute();
+        } catch (Exception $e) {
+            sendJson(['error' => 'Error al obtener categorías con imágenes: ' . $e->getMessage()], 500);
         }
         break;
 
@@ -68,7 +82,6 @@ switch ($action) {
             sendJson(['error' => 'Error al obtener imágenes: ' . $e->getMessage()], 500);
         }
         break;
-
 
     case 'addWord':
         try {
@@ -92,8 +105,23 @@ switch ($action) {
         }
         break;
 
+    case 'searchWord':
+        try {
+            (new ActionSearchWord())->execute();
+        } catch (Exception $e) {
+            $message = $isAjax
+                ? ['error' => $e->getMessage()]
+                : 'Error al buscar palabra.';
+            sendJson($message, 500);
+        }
+        break;
+
     case 'deleteWord':
         (new ActionDeleteWord())->execute($_POST);
+        break;
+
+    case 'countWordsWithImages':
+        (new ActionCountWordsWithImages())->execute();
         break;
 
     default:

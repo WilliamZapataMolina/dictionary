@@ -1,9 +1,10 @@
 Array
 (
-    [word_in] => house
-    [meaning] => hogar
-    [category_id] => 14
-    [image_selector] => /dictionary/public/images/home/HOUSE.png
-    [image_url_path] => /dictionary/public/images/home/HOUSE.png
-    [file_path] => /dictionary/public/images/home/HOUSE.png
+    [word_in] => arrival /əˈraɪvəl/
+    [meaning] => llegada, aterrizaje (de avión)
+    [category_id] => 1
+    [image_selector] => /dictionary/public/images/airport/ARRIVALS.png
+    [file_id] => 
+    [image_url_path] => /dictionary/public/images/airport/ARRIVALS.png
+    [file_path] => /dictionary/public/images/airport/ARRIVALS.png
 )

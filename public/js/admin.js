@@ -1,6 +1,5 @@
 window.addEventListener("load", () => {
     const formAdd = document.getElementById("formAddWord");
-    const formEdit = document.getElementById("formEditWord");
     const tableWords = document.getElementById("tableWords");
     const categorySelect = formAdd.querySelector("select[name='category_id']");
 
@@ -50,42 +49,7 @@ window.addEventListener("load", () => {
         }
     });
 
-    // ENVÍO DE FORMULARIO DE EDICIÓN
-    formEdit.addEventListener("submit", async e => {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-        const action = "updateWord";
-
-        formData.append("id", form.dataset.wordId);
-
-        const rawPath = form.querySelector("input[name='image_url_path']")?.value;
-        const path = rawPath?.trim();
-
-        if (path && path !== "undefined" && path !== "") {
-            formData.append("file_path", path);
-        }
-
-        try {
-            const res = await fetch(`../server/controller/Controller.php?action=${action}`, {
-                method: "POST",
-                body: formData
-            });
-            const data = await res.json();
-            alert(data.message);
-            if (data.success) {
-                form.reset();
-                delete form.dataset.editing;
-                delete form.dataset.wordId;
-                cargarPalabras();
-                bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-            }
-        } catch (err) {
-            console.error("Error en envío (edición):", err);
-        }
-    });
-
-    // —————————————————————————————
+    // FUNCIONES PARA CARGAR CONTENIDOS
 
     function cargarNavbarYFooter() {
         fetch("parts/navbar.html").then(r => r.text()).then(html => document.getElementById("navbar").innerHTML = html);
@@ -158,52 +122,10 @@ window.addEventListener("load", () => {
         html += "</tbody></table>";
         tableWords.innerHTML = html;
 
-        setupEditButtons();
+        // SETUP botones que no tienen relación con el modal
         setupDeleteButtons();
-    }
-
-    function setupEditButtons() {
-        document.querySelectorAll(".btn-edit").forEach(btn => {
-            btn.onclick = async () => {
-                const row = btn.closest("tr");
-
-                formEdit.dataset.editing = "true";
-                formEdit.dataset.wordId = row.dataset.id;
-
-                formEdit.word_in.value = row.dataset.word_in;
-                formEdit.meaning.value = row.dataset.meaning;
-
-                const categorySelectEdit = formEdit.querySelector("select[name='category_id']");
-                categorySelectEdit.innerHTML = `<option value="">Cargando categorías...</option>`;
-
-                try {
-                    const res = await fetch("../server/controller/Controller.php?action=getCategories");
-                    const data = await res.json();
-                    categorySelectEdit.innerHTML = `<option value="">Seleccionar categoría</option>`;
-
-                    data.forEach(cat => {
-                        const opt = document.createElement("option");
-                        opt.value = cat.id;
-                        opt.textContent = cat.name;
-                        categorySelectEdit.appendChild(opt);
-                    });
-
-                    categorySelectEdit.value = row.dataset.category_id;
-                } catch (e) {
-                    console.error("Error cargando categorías:", e);
-                    categorySelectEdit.innerHTML = `<option value="">(Error)</option>`;
-                }
-
-                await cargarSelectorDeImagenes({
-                    selector: document.getElementById("imageSelector"),
-                    preview: document.getElementById("imagePreview"),
-                    hiddenInput: formEdit.querySelector("input[name='image_url_path']"),
-                    selectedPath: row.dataset.image_path
-                });
-
-                new bootstrap.Modal(document.getElementById("editModal")).show();
-            };
-        });
+        // setupEditButtons se pasa a modal.js porque es para abrir modal
+        document.dispatchEvent(new Event("wordsTableRendered"));
     }
 
     function setupDeleteButtons() {
@@ -253,4 +175,9 @@ window.addEventListener("load", () => {
             console.error("Error al cargar imágenes:", e);
         }
     }
+
+    // Exporto las funciones necesarias para modal.js
+    window.cargarCategorias = cargarCategorias;
+    window.cargarSelectorDeImagenes = cargarSelectorDeImagenes;
+    window.cargarPalabras = cargarPalabras;
 });
