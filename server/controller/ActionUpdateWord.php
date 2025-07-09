@@ -17,6 +17,11 @@ class ActionUpdateWord
     public function execute($data)
     {
         error_log(print_r($data, true));
+        error_log("Recibido ID: " . var_export($data['id'], true));
+        error_log("word_in: " . var_export($data['word_in'], true));
+        error_log("meaning: " . var_export($data['meaning'], true));
+        error_log("category_id: " . var_export($data['category_id'], true));
+        error_log("file_id: " . var_export($data['file_id'] ?? null, true));
 
         $requiredFields = ['id', 'word_in', 'meaning', 'category_id'];
         foreach ($requiredFields as $field) {
@@ -52,30 +57,48 @@ class ActionUpdateWord
             }
 
             // Preparar sentencia de actualización
-            $stmt = $db->prepare("UPDATE words 
-                SET word_in = :word_in, 
-                    meaning = :meaning, 
-                    category_id = :category_id, 
-                    file_id = :file_id 
-                WHERE id = :id");
+            $sql = "UPDATE words 
+        SET word_in = :word_in, 
+            meaning = :meaning, 
+            category_id = :category_id";
+
+            $includeFileId = isset($data['file_id']) && $data['file_id'] !== '';
+            if ($includeFileId) {
+                $sql .= ", file_id = :file_id";
+            }
+
+            $sql .= " WHERE id = :id";
+            $stmt = $db->prepare($sql);
 
             $stmt->bindValue(':word_in', trim($data['word_in']), PDO::PARAM_STR);
             $stmt->bindValue(':meaning', trim($data['meaning']), PDO::PARAM_STR);
             $stmt->bindValue(':category_id', (int)$data['category_id'], PDO::PARAM_INT);
             $stmt->bindValue(':id', (int)$data['id'], PDO::PARAM_INT);
 
-            if ($fileId === null) {
-                $stmt->bindValue(':file_id', null, PDO::PARAM_NULL);
-            } else {
-                $stmt->bindValue(':file_id', $fileId, PDO::PARAM_INT);
+            // Solo hacer bind si está incluido en el SQL
+            if ($includeFileId) {
+                if ($fileId === null) {
+                    $stmt->bindValue(':file_id', null, PDO::PARAM_NULL);
+                } else {
+                    $stmt->bindValue(':file_id', $fileId, PDO::PARAM_INT);
+                }
             }
+
 
             $ok = $stmt->execute();
 
-            if ($ok) {
+            $rowCount = $stmt->rowCount();
+            error_log("Filas afectadas: $rowCount");
+
+            if ($ok && $rowCount > 0) {
                 sendJson([
                     'success' => true,
                     'message' => 'Palabra actualizada correctamente.'
+                ]);
+            } elseif ($ok && $rowCount === 0) {
+                sendJson([
+                    'success' => true,
+                    'message' => 'La palabra no fue modificada (posiblemente los valores son iguales).'
                 ]);
             } else {
                 sendJson([

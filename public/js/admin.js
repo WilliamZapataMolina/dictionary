@@ -106,8 +106,8 @@ window.addEventListener("load", () => {
                 data-word_in="${w.word_in}"
                 data-meaning="${w.meaning}"
                 data-category_id="${w.category_id}"
-                data-image_path="${w.file_path || ''}"
-                data-file_id="${w.file_id || ''}">
+                data-file_id="${w.file_id || ''}"
+                data-image_path="${w.file_path || ''}">
               <td>${w.word_in}</td>
               <td>${w.meaning}</td>
               <td>${w.category}</td>

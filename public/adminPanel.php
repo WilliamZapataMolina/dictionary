@@ -45,7 +45,7 @@
                     <label for="imageSelectorAdd" class="form-label">Seleccionar imagen</label>
                     <select id="imageSelectorAdd" name="image_selector" class="form-select" required>
                         <input type="hidden" name="file_id" id="addFileId" />
-                        <option value="">Seleccionar imagen...</option>
+
                         <!-- JS rellenará estas opciones -->
                     </select>
                 </div>
@@ -61,7 +61,7 @@
 
                 <!-- Campos ocultos para manejar datos de imagen -->
                 <input type="hidden" name="image_url_path" id="addImageUrlPath" />
-                <input type="hidden" name="file_id" id="addFileId" />
+
             </form>
         </section>
 
@@ -102,10 +102,10 @@
 
                     <div class="mb-3">
                         <label for="imageSelectorEdit" class="form-label">Seleccionar imagen</label>
-                        <select id="imageSelectorEdit" name="image_selector" class="form-select">
-                            <input type="hidden" name="file_id" id="editFileId" value="0" />
+                        <select id="imageSelectorEdit" name="image_selector" class="form-select" required>
                             <!-- JS rellenará estas opciones -->
                         </select>
+                        <input type="hidden" name="file_id" id="editFileId" value="" />
                     </div>
 
                     <div class="mb-3 text-center">
@@ -113,9 +113,10 @@
                     </div>
 
                     <!-- Campos ocultos para imagen y para identificar la palabra a editar -->
+
                     <input type="hidden" name="image_url_path" id="editImageUrlPath" />
 
-                    <input type="hidden" name="word_id" id="editWordId" />
+                    <input type="hidden" name="id" id="editWordId" />
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -131,7 +132,7 @@
 
     <!-- Script principal (lógica del panel) -->
     <script src="js/admin.js" defer></script>
-    <script src="js/modal.js"></script>
+    <script src="js/modal.js" defer></script>
 
 </body>
 
