@@ -1,9 +1,9 @@
 Array
 (
-    [word_in] => departure /dɪˈpɑːrtʃər/
-    [meaning] => salida, despegue (avión)
-    [category_id] => 1
-    [image_selector] => /dictionary/public/images/airport/DEPARTURE.png
-    [image_url_path] => /dictionary/public/images/airport/DEPARTURE.png
-    [file_path] => /dictionary/public/images/airport/DEPARTURE.png
+    [word_in] => goat /ɡəʊt/
+    [meaning] => cabra
+    [category_id] => 2
+    [image_selector] => /dictionary/public/images/domesticAnimals/GOAT.png
+    [image_url_path] => /dictionary/public/images/domesticAnimals/GOAT.png
+    [file_path] => /dictionary/public/images/domesticAnimals/GOAT.png
 )
