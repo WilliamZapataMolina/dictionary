@@ -89,6 +89,7 @@ window.addEventListener("load", () => {
     }
 
     function renderizarTabla(words) {
+        console.log("FILE_IDS en renderizarTabla:", words.map(w => w.file_id));
         if (!words.length) {
             tableWords.innerHTML = "<p>No hay palabras.</p>";
             return;
@@ -106,7 +107,8 @@ window.addEventListener("load", () => {
                 data-word_in="${w.word_in}"
                 data-meaning="${w.meaning}"
                 data-category_id="${w.category_id}"
-                data-file_id="${w.file_id || ''}"
+                data-file-id="${w.file_id !== null && w.file_id !== undefined ? w.file_id : ''}"
+
                 data-image_path="${w.file_path || ''}">
               <td>${w.word_in}</td>
               <td>${w.meaning}</td>

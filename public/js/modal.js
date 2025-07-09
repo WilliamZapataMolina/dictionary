@@ -2,139 +2,173 @@ window.addEventListener("load", () => {
     const formEdit = document.getElementById("formEditWord");
     const modalElement = document.getElementById("editModal");
 
-    // Función para cargar imágenes en el selector
+    /**
+     * Carga las imágenes al selector del modal de edición.
+     */
     async function cargarSelectorDeImagenes({ selector, preview, hiddenInput, fileIdInput, selectedFileId }) {
-        selector.innerHTML = '<option value="">Cargando imágenes...</option>';
+        selector.innerHTML = '<option value="">Cargando imágenes…</option>';
         try {
             const res = await fetch("../server/controller/Controller.php?action=getImages");
             const images = await res.json();
 
             selector.innerHTML = '<option value="">Seleccionar imagen</option>';
             images.forEach(img => {
-                const option = document.createElement("option");
-                option.value = img.id;
-                option.textContent = img.name;
-                option.dataset.path = img.path;
-                selector.appendChild(option);
+                const opt = document.createElement("option");
+                opt.value = img.id;
+                opt.textContent = img.name;
+                opt.dataset.path = img.path;
+                selector.appendChild(opt);
             });
 
             if (selectedFileId) {
                 selector.value = selectedFileId;
-                const selectedOption = selector.querySelector(`option[value="${selectedFileId}"]`);
-                if (selectedOption) {
-                    const path = selectedOption.dataset.path;
-                    preview.src = path;
-                    preview.style.display = path ? "block" : "none";
-                    hiddenInput.value = path;
+                const sel = selector.querySelector(`option[value="${selectedFileId}"]`);
+                if (sel) {
+                    preview.src = sel.dataset.path;
+                    preview.style.display = 'block';
+                    hiddenInput.value = sel.dataset.path;
                     fileIdInput.value = selectedFileId;
                 }
+            } else {
+                preview.style.display = 'none';
+                hiddenInput.value = '';
+                fileIdInput.value = '';
             }
 
-            // Evento change para actualizar vista previa y campos ocultos
             selector.addEventListener("change", () => {
-                const selected = selector.options[selector.selectedIndex];
-                if (selected && selected.value) {
-                    preview.src = selected.dataset.path || "";
-                    preview.style.display = "block";
-                    hiddenInput.value = preview.src;
-                    fileIdInput.value = selected.value;
+                console.log("🔄 Imagen cambiada. Nuevo file_id:", fileIdInput.value);
+
+                const sel = selector.options[selector.selectedIndex];
+                if (sel && sel.value) {
+                    preview.src = sel.dataset.path;
+                    preview.style.display = 'block';
+                    hiddenInput.value = sel.dataset.path;
+                    fileIdInput.value = sel.value;
                 } else {
-                    preview.style.display = "none";
-                    hiddenInput.value = "";
-                    fileIdInput.value = "";
+                    preview.style.display = 'none';
+                    hiddenInput.value = '';
+                    fileIdInput.value = '';
                 }
             });
-
         } catch (err) {
             console.error("Error cargando imágenes:", err);
-            selector.innerHTML = '<option value="">(Error al cargar imágenes)</option>';
-            preview.style.display = "none";
+            selector.innerHTML = '<option value="">Error al cargar imágenes</option>';
+            preview.style.display = 'none';
         }
     }
 
-    // Setup botones para abrir modal con datos precargados
+    /**
+     * Enlaza cada botón "Editar" de la tabla para abrir el modal
+     * y precargar los datos correspondientes.
+     */
     async function setupEditButtons() {
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.onclick = async () => {
                 const row = btn.closest("tr");
-                formEdit.dataset.editing = "true";
+
+                // Guardamos los datos en dataset
                 formEdit.dataset.wordId = row.dataset.id;
-                formEdit.dataset.originalFileId = row.dataset.file_id || "";
+                formEdit.dataset.originalFile = row.dataset.fileId || "";
 
-                formEdit.querySelector("[name='word_in']").value = row.dataset.word_in;
-                formEdit.querySelector("[name='meaning']").value = row.dataset.meaning;
 
-                const imageSelector = formEdit.querySelector("select[name='image_selector']");
-                const fileIdInput = formEdit.querySelector("input[name='file_id']");
-                const imagePathInput = formEdit.querySelector("input[name='image_url_path']");
-                const preview = document.getElementById("imagePreviewEdit");
+                // Rellenamos los campos
+                formEdit.word_in.value = row.dataset.word_in;
+                formEdit.meaning.value = row.dataset.meaning;
+                formEdit.querySelector("input[name='id']").value = row.dataset.id;
 
-                // Cargar categorías (puedes adaptar si quieres)
-                const categorySelect = formEdit.querySelector("select[name='category_id']");
-                categorySelect.innerHTML = `<option value="">Cargando categorías...</option>`;
+                // Cargar categorías
+                const catSel = formEdit.category_id;
+                catSel.innerHTML = '<option>…</option>';
                 try {
-                    const data = await fetch("../server/controller/Controller.php?action=getCategories").then(r => r.json());
-                    categorySelect.innerHTML = `<option value="">Seleccionar categoría</option>`;
-                    data.forEach(cat => {
-                        const opt = document.createElement("option");
-                        opt.value = cat.id;
-                        opt.textContent = cat.name;
-                        categorySelect.appendChild(opt);
+                    const cats = await (await fetch("../server/controller/Controller.php?action=getCategories")).json();
+                    catSel.innerHTML = '<option value="">Seleccionar categoría</option>';
+                    cats.forEach(c => {
+                        const o = document.createElement("option");
+                        o.value = c.id;
+                        o.textContent = c.name;
+                        catSel.append(o);
                     });
-                    categorySelect.value = row.dataset.category_id;
+                    catSel.value = row.dataset.category_id;
                 } catch (e) {
                     console.error("Error cargando categorías:", e);
-                    categorySelect.innerHTML = `<option value="">(Error)</option>`;
                 }
 
-                // Mostrar modal y cargar imágenes
+                // Mostrar modal
                 new bootstrap.Modal(modalElement).show();
 
+                // Cargar imágenes
                 await cargarSelectorDeImagenes({
-                    selector: imageSelector,
-                    preview,
-                    hiddenInput: imagePathInput,
-                    fileIdInput,
+                    selector: formEdit.image_selector,
+                    preview: document.getElementById("imagePreviewEdit"),
+                    hiddenInput: formEdit.image_url_path,
+                    fileIdInput: formEdit.file_id,
                     selectedFileId: row.dataset.file_id
                 });
             };
         });
     }
 
-    // Evento submit para el formulario
-    formEdit.addEventListener("submit", async e => {
+    /**
+     * Maneja el envío del formulario de edición (modal).
+     * Asegura que se mantenga el file_id original si no se cambia.
+     */
+    formEdit.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const form = e.target;
-        const fileIdInput = form.querySelector("input[name='file_id']");
-        const imageSelector = form.querySelector("select[name='image_selector']");
-        //fileIdInput.value = imageSelector.value || fileIdInput.value;
-        fileIdInput.value = imageSelector.value || form.dataset.originalFileId;
-        console.log("🌐 Dataset wordId:", form.dataset.wordId);
-        const formData = new FormData(form);
-        formData.append("id", form.dataset.wordId);
 
-        console.log("file_id en formData:", formData.get("file_id")); // <-- Aquí
+        const imageSelector = form.querySelector("select[name='image_selector']");
+        const fileIdInput = form.querySelector("input[name='file_id']");
+        const wordId = form.dataset.wordId;
+        const originalFileId = form.dataset.originalFile;
+
+        // 🔍 LOG importante
+        console.log("🔍 form.dataset.wordId:", wordId);
+        console.log("🔍 form.dataset.originalFile:", originalFileId);
+
+        // ✅ Corregir cómo se establece el file_id
+        if (imageSelector && imageSelector.value && imageSelector.value !== "undefined") {
+            fileIdInput.value = imageSelector.value;
+        } else if (originalFileId && originalFileId !== "undefined") {
+            fileIdInput.value = originalFileId;
+        } else {
+            fileIdInput.value = ""; // si no hay nada
+        }
+
+
+        // ✅ Corregimos el id
+        const formData = new FormData(form);
+        formData.set("id", wordId); // ← IMPORTANTE, no uses append
+
+        // 🔍 Verificar todos los valores antes de enviar
+        console.log("📦 Datos enviados:");
+        for (const [k, v] of formData.entries()) {
+            console.log(`${k}: ${v}`);
+        }
 
         try {
-            const res = await fetch(`../server/controller/Controller.php?action=updateWord`, {
+            console.log("🚀 file_id FINAL enviado:", fileIdInput.value);
+
+            const res = await fetch("../server/controller/Controller.php?action=updateWord", {
                 method: "POST",
-                body: formData
+                body: formData,
             });
+
             const data = await res.json();
             alert(data.message);
+
             if (data.success) {
                 form.reset();
-                delete form.dataset.editing;
                 delete form.dataset.wordId;
+                delete form.dataset.originalFile;
                 window.cargarPalabras();
                 bootstrap.Modal.getInstance(modalElement).hide();
             }
         } catch (err) {
-            console.error("Error en envío (edición):", err);
+            console.error("🚨 Error en el envío:", err);
         }
     });
 
-    // Inicializar setup de botones
+    // Espera a que se cargue la tabla para enlazar botones
     document.addEventListener("wordsTableRendered", setupEditButtons);
 });

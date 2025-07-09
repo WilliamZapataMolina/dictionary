@@ -37,12 +37,12 @@ class ActionUpdateWord
             $database = new DatabaseController();
             $db = $database->getConnection();
 
-            // Validar y convertir correctamente el file_id desde $data, no desde $_POST
-            $fileId = (isset($data['file_id']) && is_numeric($data['file_id']) && (int)$data['file_id'] > 0)
+            // Validar y convertir correctamente el file_id
+            $fileId = isset($data['file_id']) && is_numeric($data['file_id']) && (int)$data['file_id'] > 0
                 ? (int)$data['file_id']
                 : null;
 
-            // Validar existencia del archivo si file_id no es null
+            // Verificar existencia del archivo si se proporcionó un file_id
             if ($fileId !== null) {
                 $checkFileStmt = $db->prepare("SELECT COUNT(*) FROM files WHERE id = :id");
                 $checkFileStmt->bindValue(':id', $fileId, PDO::PARAM_INT);
@@ -56,18 +56,14 @@ class ActionUpdateWord
                 }
             }
 
-            // Preparar sentencia de actualización
+            // Preparar sentencia de actualización (siempre incluye file_id)
             $sql = "UPDATE words 
-        SET word_in = :word_in, 
-            meaning = :meaning, 
-            category_id = :category_id";
+                    SET word_in = :word_in, 
+                        meaning = :meaning, 
+                        category_id = :category_id, 
+                        file_id = :file_id
+                    WHERE id = :id";
 
-            $includeFileId = isset($data['file_id']) && $data['file_id'] !== '';
-            if ($includeFileId) {
-                $sql .= ", file_id = :file_id";
-            }
-
-            $sql .= " WHERE id = :id";
             $stmt = $db->prepare($sql);
 
             $stmt->bindValue(':word_in', trim($data['word_in']), PDO::PARAM_STR);
@@ -75,18 +71,14 @@ class ActionUpdateWord
             $stmt->bindValue(':category_id', (int)$data['category_id'], PDO::PARAM_INT);
             $stmt->bindValue(':id', (int)$data['id'], PDO::PARAM_INT);
 
-            // Solo hacer bind si está incluido en el SQL
-            if ($includeFileId) {
-                if ($fileId === null) {
-                    $stmt->bindValue(':file_id', null, PDO::PARAM_NULL);
-                } else {
-                    $stmt->bindValue(':file_id', $fileId, PDO::PARAM_INT);
-                }
+            // file_id puede ser NULL
+            if ($fileId === null) {
+                $stmt->bindValue(':file_id', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':file_id', $fileId, PDO::PARAM_INT);
             }
 
-
             $ok = $stmt->execute();
-
             $rowCount = $stmt->rowCount();
             error_log("Filas afectadas: $rowCount");
 

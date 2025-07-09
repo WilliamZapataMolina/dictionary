@@ -19,10 +19,17 @@ class ActionGetWord
         $db = (new DatabaseController())->getConnection();
 
         $sql = "
-            SELECT w.word_in, w.meaning, c.name AS category, f.path AS image_url, w.id, w.category_id
+            SELECT
+                w.id,
+                w.word_in,
+                w.meaning,
+                w.category_id,
+                w.file_id,            
+                c.name AS category,
+                f.path AS file_path
             FROM words w
             JOIN categories c ON w.category_id = c.id
-            LEFT JOIN files f ON w.file_id = f.id
+            LEFT JOIN files f   ON w.file_id = f.id
             ORDER BY w.id DESC
         ";
 
