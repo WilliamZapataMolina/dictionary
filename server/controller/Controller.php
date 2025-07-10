@@ -19,12 +19,14 @@ $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
     strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
 require_once __DIR__ . '/../daos/db.php';
+require_once __DIR__ . '/../daos/FileModel.php';
 require_once __DIR__ . '/ActionLogin.php';
 require_once __DIR__ . '/ActionLogout.php';
 require_once __DIR__ . '/ActionGetWord.php';
 require_once __DIR__ . '/ActionGetCategories.php';
 require_once __DIR__ . '/ActionGetCategoriesWithImages.php';
-require_once __DIR__ . '/ActionGetImages.php';
+require_once __DIR__ . '/ActionGetImagesFromFilesSystem.php';
+require_once __DIR__ . '/ActionGetImagesFromDatabase.php';
 require_once __DIR__ . '/ActionAddWord.php';
 require_once __DIR__ . '/ActionUpdateWord.php';
 require_once __DIR__ . '/ActionSearchWord.php';
@@ -75,9 +77,17 @@ switch ($action) {
         }
         break;
 
-    case 'getImages':
+    case 'getImagesFromFilesSystem':
         try {
-            (new ActionGetImages())->execute();
+            (new ActionGetImagesFromFilesSystem())->execute();
+        } catch (Exception $e) {
+            sendJson(['error' => 'Error al obtener imágenes: ' . $e->getMessage()], 500);
+        }
+        break;
+
+    case 'getImagesFromDatabase':
+        try {
+            (new ActionGetImagesFromDatabase())->execute();
         } catch (Exception $e) {
             sendJson(['error' => 'Error al obtener imágenes: ' . $e->getMessage()], 500);
         }

@@ -1,9 +1,9 @@
 Array
 (
-    [word_in] => goat /ɡəʊt/
-    [meaning] => cabra
-    [category_id] => 2
-    [image_selector] => /dictionary/public/images/domesticAnimals/GOAT.png
-    [image_url_path] => /dictionary/public/images/domesticAnimals/GOAT.png
-    [file_path] => /dictionary/public/images/domesticAnimals/GOAT.png
+    [word_in] => lion /ˈlaɪən/
+    [meaning] => león
+    [category_id] => 35
+    [image_selector] => /dictionary/public/images/wildAnimals/LION.png
+    [image_url_path] => /dictionary/public/images/wildAnimals/LION.png
+    [file_path] => /dictionary/public/images/wildAnimals/LION.png
 )

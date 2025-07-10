@@ -1,6 +1,6 @@
 <?php
 
-class ActionGetImages
+class ActionGetImagesFromFilesSystem
 {
     // Ruta absoluta en disco al directorio 'images'
     private $baseDir = __DIR__ . '/../../public/images/';

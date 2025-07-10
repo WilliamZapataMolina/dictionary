@@ -2,81 +2,87 @@ window.addEventListener("load", () => {
     const formEdit = document.getElementById("formEditWord");
     const modalElement = document.getElementById("editModal");
 
-    /**
-     * Carga las imágenes al selector del modal de edición.
-     */
-    async function cargarSelectorDeImagenes({ selector, preview, hiddenInput, fileIdInput, selectedFileId }) {
+    async function cargarSelectorDeImagenes({ selector, preview, hiddenInput, selectedFileId }) {
+        // 1. Mostrar un mensaje de carga inicial
         selector.innerHTML = '<option value="">Cargando imágenes…</option>';
+        console.log("🟡 Iniciando carga de imágenes para selector.");
+
         try {
-            const res = await fetch("../server/controller/Controller.php?action=getImages");
+            // 2. Obtener las imágenes del servidor
+            const res = await fetch("../server/controller/Controller.php?action=getImagesFromDataBase");
             const images = await res.json();
+            console.log(`✅ ${images.length} imágenes obtenidas del servidor.`);
 
-            selector.innerHTML = '<option value="">Seleccionar imagen</option>';
+            // 3. Reconstruir el selector con todas las opciones de imagen
+            let optionsHtml = '<option value="">Seleccionar imagen</option>';
             images.forEach(img => {
-                const opt = document.createElement("option");
-                opt.value = img.id;
-                opt.textContent = img.name;
-                opt.dataset.path = img.path;
-                selector.appendChild(opt);
+                optionsHtml += `<option value="${img.id}" data-path="${img.path}">${img.name}</option>`;
             });
+            selector.innerHTML = optionsHtml; // Asigna todas las opciones de una vez
 
+            // 4. Intentar seleccionar la imagen original o la previamente seleccionada
             if (selectedFileId) {
-                selector.value = selectedFileId;
-                const sel = selector.querySelector(`option[value="${selectedFileId}"]`);
-                if (sel) {
-                    preview.src = sel.dataset.path;
+                // Asegurarse de que la opción del selectedFileId exista en el selector
+                const optionToSelect = selector.querySelector(`option[value="${selectedFileId}"]`);
+                if (optionToSelect) {
+                    selector.value = selectedFileId; // Establece el valor del select
+                    preview.src = optionToSelect.dataset.path; // Usa el data-path de la opción seleccionada
                     preview.style.display = 'block';
-                    hiddenInput.value = sel.dataset.path;
-                    fileIdInput.value = selectedFileId;
-                }
-            } else {
-                preview.style.display = 'none';
-                hiddenInput.value = '';
-                fileIdInput.value = '';
-            }
-
-            selector.addEventListener("change", () => {
-                console.log("🔄 Imagen cambiada. Nuevo file_id:", fileIdInput.value);
-
-                const sel = selector.options[selector.selectedIndex];
-                if (sel && sel.value) {
-                    preview.src = sel.dataset.path;
-                    preview.style.display = 'block';
-                    hiddenInput.value = sel.dataset.path;
-                    fileIdInput.value = sel.value;
+                    hiddenInput.value = optionToSelect.dataset.path;
+                    console.log(`🖼️ Imagen precargada correctamente: ${optionToSelect.dataset.path} (ID: ${selectedFileId})`);
                 } else {
+                    // Si el ID de la imagen original no se encuentra en las opciones cargadas
+                    selector.value = ""; // Asegura que "Seleccionar imagen" esté seleccionada
                     preview.style.display = 'none';
                     hiddenInput.value = '';
-                    fileIdInput.value = '';
+                    console.warn(`⚠️ selectedFileId (${selectedFileId}) no encontrado en las opciones del selector. Se ha limpiado la vista previa.`);
+                }
+            } else {
+                // Si no hay un selectedFileId (palabra sin imagen o nueva)
+                selector.value = ""; // Asegura que "Seleccionar imagen" esté seleccionado
+                preview.style.display = 'none';
+                hiddenInput.value = '';
+                console.log("🚫 No hay selectedFileId inicial. Selector e imagen de vista previa limpios.");
+            }
+
+            // 5. Configurar el evento 'change' para cuando el usuario manipule el selector
+            selector.addEventListener("change", () => {
+                const sel = selector.options[selector.selectedIndex];
+                if (sel && sel.value) { // Si hay una opción seleccionada con valor
+                    preview.src = sel.dataset.path;
+                    preview.style.display = 'block';
+                    hiddenInput.value = sel.dataset.path;
+                    console.log("🔄 Imagen cambiada por el usuario. Nuevo file_id:", sel.value);
+                } else { // Si se selecciona la opción "Seleccionar imagen" (vacía)
+                    preview.style.display = 'none';
+                    hiddenInput.value = '';
+                    console.log("🔄 Imagen desvinculada por el usuario (file_id limpio).");
                 }
             });
+
         } catch (err) {
-            console.error("Error cargando imágenes:", err);
+            // Manejo de errores en caso de que la petición falle
+            console.error("🚨 Error cargando imágenes para el selector:", err);
             selector.innerHTML = '<option value="">Error al cargar imágenes</option>';
             preview.style.display = 'none';
         }
     }
 
-    /**
-     * Enlaza cada botón "Editar" de la tabla para abrir el modal
-     * y precargar los datos correspondientes.
-     */
     async function setupEditButtons() {
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.onclick = async () => {
                 const row = btn.closest("tr");
 
-                // Guardamos los datos en dataset
+                // 👇👇👇 PON TU BREAKPOINT AQUÍ 👇👇👇
                 formEdit.dataset.wordId = row.dataset.id;
+                // 👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆
                 formEdit.dataset.originalFile = row.dataset.fileId || "";
 
-
-                // Rellenamos los campos
                 formEdit.word_in.value = row.dataset.word_in;
                 formEdit.meaning.value = row.dataset.meaning;
                 formEdit.querySelector("input[name='id']").value = row.dataset.id;
 
-                // Cargar categorías
+
                 const catSel = formEdit.category_id;
                 catSel.innerHTML = '<option>…</option>';
                 try {
@@ -93,62 +99,62 @@ window.addEventListener("load", () => {
                     console.error("Error cargando categorías:", e);
                 }
 
-                // Mostrar modal
                 new bootstrap.Modal(modalElement).show();
 
-                // Cargar imágenes
                 await cargarSelectorDeImagenes({
-                    selector: formEdit.image_selector,
+                    selector: formEdit.querySelector("select[name='file_id']"),
                     preview: document.getElementById("imagePreviewEdit"),
                     hiddenInput: formEdit.image_url_path,
-                    fileIdInput: formEdit.file_id,
-                    selectedFileId: row.dataset.file_id
+                    selectedFileId: row.dataset.fileId
                 });
             };
         });
     }
 
-    /**
-     * Maneja el envío del formulario de edición (modal).
-     * Asegura que se mantenga el file_id original si no se cambia.
-     */
     formEdit.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         const form = e.target;
 
-        const imageSelector = form.querySelector("select[name='image_selector']");
-        const fileIdInput = form.querySelector("input[name='file_id']");
+        const fileIdSelect = form.querySelector("select[name='file_id']");
+        // <-- PON UN BREAKPOINT JUSTO EN LA LÍNEA SIGUIENTE
+        console.log("🐛 Valor RAW de fileIdSelect.value al inicio del submit:", fileIdSelect.value);
         const wordId = form.dataset.wordId;
         const originalFileId = form.dataset.originalFile;
 
-        // 🔍 LOG importante
-        console.log("🔍 form.dataset.wordId:", wordId);
-        console.log("🔍 form.dataset.originalFile:", originalFileId);
+        // 1. Obtener el valor actual del select. Convertir 'undefined' o null a cadena vacía.
+        // Esto es CLAVE para evitar que la cadena "undefined" llegue más allá.
+        let finalFileIdToSend = fileIdSelect.value ?? "";
+        // 👆👆👆 ¡CAMBIO AQUÍ! Añadimos ?? "" 👆👆👆
 
-        // ✅ Corregir cómo se establece el file_id
-        if (imageSelector && imageSelector.value && imageSelector.value !== "undefined") {
-            fileIdInput.value = imageSelector.value;
-        } else if (originalFileId && originalFileId !== "undefined") {
-            fileIdInput.value = originalFileId;
-        } else {
-            fileIdInput.value = ""; // si no hay nada
+        // Puedes quitar el 'debugger;' si ya no lo necesitas, o dejarlo para verificar este paso.
+        // debugger; 
+
+        // 2. Lógica para determinar el file_id final a enviar:
+        // Si el valor actual del select es "" (opción "Seleccionar imagen") Y la palabra tenía una imagen original,
+        // significa que el usuario no cambió la imagen (o no la quitó explícitamente), entonces restauramos la original.
+        if (finalFileIdToSend === "" && originalFileId) {
+            finalFileIdToSend = originalFileId;
+            console.log("🔁 Restaurando file_id original:", originalFileId);
+        } else if (finalFileIdToSend === "") {
+            // Si el usuario explícitamente eligió la opción vacía, o la palabra nunca tuvo imagen y el select está vacío,
+            // enviamos una cadena vacía. PHP la interpretará correctamente como NULL.
+            console.log("🔄 Intentando desvincular la imagen (enviando cadena vacía).");
         }
+        // Si finalFileIdToSend ya tiene un ID numérico (porque se seleccionó una nueva imagen), se usa ese valor.
 
-
-        // ✅ Corregimos el id
         const formData = new FormData(form);
-        formData.set("id", wordId); // ← IMPORTANTE, no uses append
+        formData.set("id", wordId);
+        // ¡Esta es la línea CRÍTICA! Sobreescribe lo que FormData haya recogido para file_id
+        // con el valor que hemos determinado (`finalFileIdToSend`).
+        formData.set("file_id", finalFileIdToSend);
 
-        // 🔍 Verificar todos los valores antes de enviar
-        console.log("📦 Datos enviados:");
+        console.log("📦 Datos enviados en FormData:");
         for (const [k, v] of formData.entries()) {
             console.log(`${k}: ${v}`);
         }
+        console.log("🚀 file_id FINAL enviado:", finalFileIdToSend); // Este log debe mostrar un número o ""
 
         try {
-            console.log("🚀 file_id FINAL enviado:", fileIdInput.value);
-
             const res = await fetch("../server/controller/Controller.php?action=updateWord", {
                 method: "POST",
                 body: formData,
@@ -165,10 +171,9 @@ window.addEventListener("load", () => {
                 bootstrap.Modal.getInstance(modalElement).hide();
             }
         } catch (err) {
-            console.error("🚨 Error en el envío:", err);
+            console.error("🚨 Error durante el envío:", err);
         }
     });
 
-    // Espera a que se cargue la tabla para enlazar botones
     document.addEventListener("wordsTableRendered", setupEditButtons);
 });

@@ -31,7 +31,7 @@
 
                     <div class="mb-3">
                         <label for="imageSelectorEdit" class="form-label">Seleccionar imagen</label>
-                        <select id="imageSelectorEdit" name="image_selector" class="form-select">
+                        <select id="imageSelectorEdit" name="file_id" class="form-select">
                             <!-- JS rellenará estas opciones -->
                         </select>
                     </div>
@@ -40,7 +40,7 @@
                         <img id="imagePreviewEdit" src="" alt="Vista previa" class="img-thumbnail" style="max-height:200px; display:none;" />
                     </div>
 
-                    <input type="hidden" name="file_id" id="editFileId" />
+
                     <input type="hidden" name="image_url_path" id="editImageUrlPath" />
                     <input type="hidden" name="id" id="editWordId" />
                 </div>
