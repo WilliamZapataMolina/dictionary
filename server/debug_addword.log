@@ -1,9 +1,9 @@
 Array
 (
-    [word_in] => lion /ˈlaɪən/
-    [meaning] => león
+    [word_in] => bear /bɛər/
+    [meaning] => oso
     [category_id] => 35
-    [image_selector] => /dictionary/public/images/wildAnimals/LION.png
-    [image_url_path] => /dictionary/public/images/wildAnimals/LION.png
-    [file_path] => /dictionary/public/images/wildAnimals/LION.png
+    [image_selector] => /dictionary/public/images/wildAnimals/BEAR.png
+    [image_url_path] => /dictionary/public/images/wildAnimals/BEAR.png
+    [file_path] => /dictionary/public/images/wildAnimals/BEAR.png
 )

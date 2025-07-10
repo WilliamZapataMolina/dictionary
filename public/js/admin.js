@@ -155,7 +155,7 @@ window.addEventListener("load", () => {
         hiddenInput.value = selectedPath;
 
         try {
-            const r = await fetch("../server/controller/Controller.php?action=getImages");
+            const r = await fetch("../server/controller/Controller.php?action=getImagesFromFilesSystem");
             const list = await r.json();
 
             list.forEach(img => {

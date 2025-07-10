@@ -41,14 +41,12 @@
                     </select>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 d-flex flex-column justify-content-end">
                     <label for="imageSelectorAdd" class="form-label">Seleccionar imagen</label>
-                    <select id="imageSelectorAdd" name="image_selector" class="form-select" required>
-                        <!-- JS rellenará estas opciones -->
-                    </select>
+                    <select id="imageSelectorAdd" name="image_selector" class="form-select" required></select>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">Agregar palabra</button>
                 </div>
 

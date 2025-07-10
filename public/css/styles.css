@@ -34,6 +34,13 @@ body.dictionary{
   justify-content: flex-start;
   text-align: center;
 }
+/*Esto se usó para que el footer se expandiera en toda la página dictionary.html*/
+body.dictionary > footer,
+body.dictionary > #footer {
+  align-self: stretch;
+  width: 100%;
+}
+
 main {
   background-color: rgba(247, 242, 242, 0.5);
   padding: 2rem;
@@ -79,7 +86,10 @@ button {
 }
 footer {
   background-color: rgba(222, 210, 210, 0.6); 
-  color: white;
+  width: 100vw;
+  position: relative;
+  left: 0;
+  color: #212529;
   text-align: center;
   padding: 1rem;
   font-size: 0.9em;

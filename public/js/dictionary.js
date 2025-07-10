@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 if (data.success) {
                     const countContainer = document.getElementById('image-count-container');
-                    countContainer.textContent = `Actualmente hay ${data.count} palabras con imágenes disponibles.`;
+                    countContainer.innerHTML = `<strong>Actualmente hay ${data.count} palabras con imágenes disponibles.</strong>`;
                 } else {
                     console.error('Error al obtener conteo:', data.message);
                 }
