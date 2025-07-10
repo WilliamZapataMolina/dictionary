@@ -2,67 +2,74 @@ window.addEventListener("load", () => {
     const formEdit = document.getElementById("formEditWord");
     const modalElement = document.getElementById("editModal");
 
-    async function cargarSelectorDeImagenes({ selector, preview, hiddenInput, selectedFileId }) {
-        // 1. Mostrar un mensaje de carga inicial
-        selector.innerHTML = '<option value="">Cargando imágenes…</option>';
-        console.log("🟡 Iniciando carga de imágenes para selector.");
+    async function cargarSelectorDeImagenes({ selector, preview, hiddenInput, selectedFileId }) { // Asegúrate de que recibes selectedFileId
+        selector.innerHTML = `<option value="">Seleccionar imagen...</option>`;
+        preview.style.display = "none"; // Ocultar inicialmente
+        preview.src = ""; // Limpiar src
 
         try {
-            // 2. Obtener las imágenes del servidor
-            const res = await fetch("../server/controller/Controller.php?action=getImagesFromDataBase");
-            const images = await res.json();
+            // *** Se accede a las imágenes desde la base de datos ***
+            const res = await fetch("../server/controller/Controller.php?action=getImagesFromDatabase");
+
+            const images = await res.json(); // Aquí se intenta parsear la respuesta
+
+            // *** Verificación de la respuesta (recomendado) ***
+            if (!Array.isArray(images)) {
+                console.error("🚨 La respuesta del servidor no es un array:", images);
+                selector.innerHTML = '<option value="">Error al cargar imágenes</option>';
+                return; // Detener la ejecución si no es un array
+            }
             console.log(`✅ ${images.length} imágenes obtenidas del servidor.`);
 
-            // 3. Reconstruir el selector con todas las opciones de imagen
-            let optionsHtml = '<option value="">Seleccionar imagen</option>';
+            // Poblar el selector con las imágenes
             images.forEach(img => {
-                optionsHtml += `<option value="${img.id}" data-path="${img.path}">${img.name}</option>`;
+                const opt = document.createElement("option");
+                opt.value = img.id; // ¡Usar el ID de la base de datos como valor!
+                opt.textContent = img.name; // Mostrar el nombre de la imagen
+                opt.dataset.path = img.path; // Guardar la ruta completa en un data attribute
+                selector.appendChild(opt);
             });
-            selector.innerHTML = optionsHtml; // Asigna todas las opciones de una vez
 
-            // 4. Intentar seleccionar la imagen original o la previamente seleccionada
+            // Precargar la imagen seleccionada si hay un selectedFileId
             if (selectedFileId) {
-                // Asegurarse de que la opción del selectedFileId exista en el selector
                 const optionToSelect = selector.querySelector(`option[value="${selectedFileId}"]`);
                 if (optionToSelect) {
-                    selector.value = selectedFileId; // Establece el valor del select
-                    preview.src = optionToSelect.dataset.path; // Usa el data-path de la opción seleccionada
-                    preview.style.display = 'block';
-                    hiddenInput.value = optionToSelect.dataset.path;
+                    selector.value = selectedFileId; // Seleccionar la opción en el <select>
+                    preview.src = optionToSelect.dataset.path; // Establecer la URL de la vista previa
+                    preview.style.display = 'block'; // Mostrar la vista previa
+                    hiddenInput.value = optionToSelect.dataset.path; // Actualizar el input oculto si lo necesitas para la URL completa
                     console.log(`🖼️ Imagen precargada correctamente: ${optionToSelect.dataset.path} (ID: ${selectedFileId})`);
                 } else {
-                    // Si el ID de la imagen original no se encuentra en las opciones cargadas
-                    selector.value = ""; // Asegura que "Seleccionar imagen" esté seleccionada
-                    preview.style.display = 'none';
-                    hiddenInput.value = '';
-                    console.warn(`⚠️ selectedFileId (${selectedFileId}) no encontrado en las opciones del selector. Se ha limpiado la vista previa.`);
+                    console.warn(`⚠️ selectedFileId (${selectedFileId}) no encontrado en las opciones del selector.`);
+                    selector.value = ""; // Asegurarse de que el selector esté en la opción por defecto
+                    preview.style.display = 'none'; // Ocultar vista previa si no se encontró
+                    hiddenInput.value = ''; // Limpiar el input oculto
                 }
             } else {
-                // Si no hay un selectedFileId (palabra sin imagen o nueva)
-                selector.value = ""; // Asegura que "Seleccionar imagen" esté seleccionado
-                preview.style.display = 'none';
-                hiddenInput.value = '';
                 console.log("🚫 No hay selectedFileId inicial. Selector e imagen de vista previa limpios.");
+                selector.value = ""; // Asegurar que el selector esté en la opción por defecto
+                preview.style.display = 'none'; // Ocultar vista previa si no hay imagen
+                hiddenInput.value = ''; // Limpiar el input oculto
             }
+            // LISTENER PARA EL CAMBIO DEL SELECTOR! ---
+            selector.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const newImagePath = selectedOption.dataset.path; // Obtener la ruta del data-path
 
-            // 5. Configurar el evento 'change' para cuando el usuario manipule el selector
-            selector.addEventListener("change", () => {
-                const sel = selector.options[selector.selectedIndex];
-                if (sel && sel.value) { // Si hay una opción seleccionada con valor
-                    preview.src = sel.dataset.path;
-                    preview.style.display = 'block';
-                    hiddenInput.value = sel.dataset.path;
-                    console.log("🔄 Imagen cambiada por el usuario. Nuevo file_id:", sel.value);
-                } else { // Si se selecciona la opción "Seleccionar imagen" (vacía)
-                    preview.style.display = 'none';
-                    hiddenInput.value = '';
-                    console.log("🔄 Imagen desvinculada por el usuario (file_id limpio).");
+                if (newImagePath) {
+                    preview.src = newImagePath;      // Actualizar la vista previa
+                    preview.style.display = 'block'; // Mostrar la vista previa
+                    hiddenInput.value = selectedOption.value; // Guardar el ID de la imagen seleccionada
+                } else {
+                    // Si se selecciona la opción "Seleccionar imagen..." o una sin path
+                    preview.src = "";
+                    preview.style.display = 'none'; // Ocultar vista previa
+                    hiddenInput.value = ""; // Limpiar el ID
                 }
             });
-
-        } catch (err) {
-            // Manejo de errores en caso de que la petición falle
-            console.error("🚨 Error cargando imágenes para el selector:", err);
+            // ----------------------------------------------------------------
+        } catch (error) {
+            console.error("🚨 Error cargando imágenes para el selector:", error);
             selector.innerHTML = '<option value="">Error al cargar imágenes</option>';
             preview.style.display = 'none';
         }
@@ -125,9 +132,6 @@ window.addEventListener("load", () => {
         // Esto es CLAVE para evitar que la cadena "undefined" llegue más allá.
         let finalFileIdToSend = fileIdSelect.value ?? "";
         // 👆👆👆 ¡CAMBIO AQUÍ! Añadimos ?? "" 👆👆👆
-
-        // Puedes quitar el 'debugger;' si ya no lo necesitas, o dejarlo para verificar este paso.
-        // debugger; 
 
         // 2. Lógica para determinar el file_id final a enviar:
         // Si el valor actual del select es "" (opción "Seleccionar imagen") Y la palabra tenía una imagen original,
