@@ -1,9 +1,9 @@
 Array
 (
-    [word_in] => bear /bɛər/
-    [meaning] => oso
+    [word_in] => ant /ænt/
+    [meaning] => hormiga
     [category_id] => 35
-    [image_selector] => /dictionary/public/images/wildAnimals/BEAR.png
-    [image_url_path] => /dictionary/public/images/wildAnimals/BEAR.png
-    [file_path] => /dictionary/public/images/wildAnimals/BEAR.png
+    [image_selector] => /dictionary/public/images/wildAnimals/ANT.png
+    [image_url_path] => /dictionary/public/images/wildAnimals/ANT.png
+    [file_path] => /dictionary/public/images/wildAnimals/ANT.png
 )
