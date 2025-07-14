@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">${category}</h5>
-                                <div class="d-flex flex-wrap">${imageHTML}</div>
+                               <div class="category-images">${imageHTML}</div>
                             </div>
                         </div>
                     `;
