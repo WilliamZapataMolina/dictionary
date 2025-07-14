@@ -1,8 +1,11 @@
 <?php
-
+// Incluir el archivo de conexión a la base de datos
 require_once __DIR__ . '/../daos/db.php';
 
-// Definir la función sendJson si aún no está definida
+/**
+ * Define la función sendJson si no ha sido definida previamente.
+ * Esta función se usa para devolver respuestas JSON con el código HTTP apropiado.
+ */
 if (!function_exists('sendJson')) {
     function sendJson($data, $code = 200)
     {
@@ -13,10 +16,14 @@ if (!function_exists('sendJson')) {
     }
 }
 
+/**
+ * Clase que maneja la eliminación de una palabra del diccionario.
+ */
 class ActionDeleteWord
 {
     public function execute($data)
     {
+        // Validar si se proporcionó un ID válido
         if (!isset($data['id']) || !is_numeric($data['id'])) {
             sendJson([
                 'success' => false,
@@ -24,15 +31,19 @@ class ActionDeleteWord
             ], 400);
         }
 
+        // Convertir el ID a entero
         $id = (int)$data['id'];
 
+        // Establecer conexión a la base de datos
         $database = new DatabaseController();
         $db = $database->getConnection();
 
         try {
+            // Preparar y ejecutar la consulta para eliminar la palabra
             $stmt = $db->prepare("DELETE FROM words WHERE id = ?");
             $ok = $stmt->execute([$id]);
 
+            // Comprobar si se eliminó alguna fila
             if ($ok && $stmt->rowCount() > 0) {
                 sendJson([
                     'success' => true,

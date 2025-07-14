@@ -1,7 +1,8 @@
 <?php
-
+// Incluir el archivo de conexión a la base de datos
 require_once __DIR__ . '/../daos/db.php';
 
+// Función utilitaria para enviar respuestas JSON estandarizadas
 if (!function_exists('sendJson')) {
     function sendJson($data, $code = 200)
     {
@@ -16,9 +17,11 @@ class ActionAddWord
 {
     public function execute($data)
     {
+        // Campos obligatorios
         $requiredFields = ['word_in', 'meaning', 'category_id'];
-        file_put_contents(__DIR__ . '/../debug_addword.log', print_r($data, true));
+        //file_put_contents(__DIR__ . '/../debug_addword.log', print_r($data, true));
 
+        // Validación de campos requeridos
         foreach ($requiredFields as $field) {
             if (empty($data[$field])) {
                 sendJson([
@@ -31,26 +34,30 @@ class ActionAddWord
         $database = new DatabaseController();
         $db = $database->getConnection();
 
-        $file_id = null;
+        $file_id = null; // Inicializamos la variable de la clave foránea de imagen
+
 
         try {
             $db->beginTransaction();
 
+            // Si se envió un path válido para la imagen
             if (!empty($data['file_path']) && strtolower(trim($data['file_path'])) !== 'undefined') {
                 $path = trim($data['file_path']);
 
+                // Obtener extensión y nombre del archivo desde la ruta
                 $extension = pathinfo($path, PATHINFO_EXTENSION);
                 $name = pathinfo($path, PATHINFO_FILENAME);
 
-                // Buscar si ya existe la ruta en la tabla files
+                // Verificar si el archivo ya existe en la tabla 'files'
                 $stmt = $db->prepare("SELECT id FROM files WHERE path = ?");
                 $stmt->execute([$path]);
                 $existingFile = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($existingFile) {
+                    // Si ya existe, usamos su ID
                     $file_id = $existingFile['id'];
                 } else {
-                    // Insertar en la tabla files
+                    // Si no existe, lo insertamos y obtenemos su ID
                     $stmt = $db->prepare("INSERT INTO files (name, extension, path) VALUES (?, ?, ?)");
                     $stmt->execute([$name, $extension, $path]);
                     $file_id = $db->lastInsertId();
@@ -70,8 +77,9 @@ class ActionAddWord
                 $file_id
             ]);
 
-            $db->commit();
+            $db->commit(); //Confirmar cambios
 
+            // Enviar respuesta de éxito o fallo
             if ($ok) {
                 sendJson([
                     'success' => true,
@@ -84,6 +92,7 @@ class ActionAddWord
                 ], 500);
             }
         } catch (PDOException $e) {
+            // Revertir en caso de error
             $db->rollBack();
             sendJson([
                 'success' => false,

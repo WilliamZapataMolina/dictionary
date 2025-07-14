@@ -1,5 +1,5 @@
 <?php
-// Incluye las clases necesarias: tu conexión a la DB y el FileModel
+// Incluye las clases necesarias: la conexión a la DB y el FileModel
 require_once __DIR__ . '/../daos/db.php';
 require_once __DIR__ . '/../daos/FileModel.php';
 

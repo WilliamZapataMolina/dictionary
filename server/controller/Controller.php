@@ -1,5 +1,5 @@
 <?php
-
+// Iniciar la sesión si aún no ha sido iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -12,12 +12,14 @@ function sendJson($data, $code = 200)
     echo json_encode($data);
     exit;
 }
-
+// Detectar la acción solicitada (por GET o POST)
 $action = $_GET['action'] ?? $_POST['action'] ?? null;
 
+// Determinar si la petición es AJAX (desde JS)
 $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
     strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
+// Incluir dependencias y clases de acciones
 require_once __DIR__ . '/../daos/db.php';
 require_once __DIR__ . '/../daos/FileModel.php';
 require_once __DIR__ . '/ActionLogin.php';
@@ -33,7 +35,7 @@ require_once __DIR__ . '/ActionSearchWord.php';
 require_once __DIR__ . '/ActionDeleteWord.php';
 require_once __DIR__ . '/ActionCountWordsWithImages.php';
 
-
+// Enrutador: ejecuta la acción correspondiente según el valor de `action`
 switch ($action) {
     case 'login':
         try {
@@ -135,6 +137,7 @@ switch ($action) {
         break;
 
     default:
+        // Acción desconocida
         $message = ['error' => 'Acción no válida'];
         sendJson($message, 400);
         break;

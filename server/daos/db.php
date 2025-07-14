@@ -1,12 +1,21 @@
 <?php
+
+/**
+ * Clase que encapsula la lógica de conexión y operaciones básicas con la base de datos MySQL.
+ * Utiliza PDO para la conexión y ejecución de consultas.
+ */
 class DatabaseController
 {
+    // Parámetros de conexión
     private  $host = 'localhost';
     private  $db_name = 'dictionary';
     private  $username = 'root';
     private  $password = '';
     private  $connection;
 
+    /**
+     * Constructor: automáticamente intenta conectar a la base de datos.
+     */
     public function __construct()
     {
         $this->connect();
@@ -20,11 +29,22 @@ class DatabaseController
             die("Error de conexión: " . $e->getMessage());
         }
     }
+    /**
+     * Devuelve la conexión activa de PDO(PHP Data Objects u objetos de datos de PHP).
+     *
+     * @return PDO
+     */
     public function getConnection()
     {
         return $this->connection;
     }
-    //Método para ejecutar una consulta
+    /**
+     * Ejecuta una consulta preparada y devuelve el statement resultante.
+     *
+     * @param string $query Consulta SQL con parámetros.
+     * @param array $params Parámetros para la consulta (opcional).
+     * @return PDOStatement Resultado de la ejecución.
+     */
     public function executeQuery($query, $params = [])
     {
         try {
@@ -36,7 +56,12 @@ class DatabaseController
             exit();
         }
     }
-    //Método para verificar si un usuario existe en la tabla admins
+    /**
+     * Verifica si un usuario con el correo electrónico dado es administrador.
+     *
+     * @param string $email Correo electrónico del usuario.
+     * @return bool True si el usuario es administrador, false si no lo es.
+     */
     public function isAdmin($email)
     {
         $query = "SELECT * FROM users WHERE email = :email";

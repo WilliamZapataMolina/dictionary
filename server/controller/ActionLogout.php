@@ -1,21 +1,19 @@
 <?php
+// Inicia la sesión solo si aún no está activa
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
 require_once __DIR__ . '/../daos/db.php';
 
+/**
+ * Clase que gestiona el cierre de sesión del usuario.
+ */
 class ActionLogout
 {
 
     public function execute()
     {
-
-        // Iniciar sesión si aún no está iniciada
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
         // Verificar si hay una sesión activa antes de destruirla
         if (isset($_SESSION["logged_user"])) {
 

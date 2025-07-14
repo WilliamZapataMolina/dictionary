@@ -1,13 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Referencias a elementos del DOM
     const searchBtn = document.getElementById('search-button');
     const searchInput = document.getElementById('search-input');
     const container = document.getElementById('dictionary-container');
     const categoriesContainer = document.getElementById('categories-container');
 
+    // Cargar cantidad de palabras con imagen y categorías al iniciar
     loadImageCount();
     loadCategories();
 
-    // Mostrar cantidad de palabras con imagen
+    /**
+     * Muestra la cantidad total de palabras que tienen imagen asociada.
+     * Se consulta al backend y se inserta el valor en el DOM.
+     */
     function loadImageCount() {
         fetch('/dictionary/server/controller/Controller.php?action=countWordsWithImages')
             .then(res => res.json())
@@ -24,7 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // Cargar categorías con imágenes
+    /**
+    * Carga y muestra las categorías visuales con sus respectivas miniaturas.
+    * Las imágenes son agrupadas por categoría, en un layout de tipo tarjeta.
+    */
     function loadCategories() {
         categoriesContainer.innerHTML = "<p class='text-muted'>Cargando categorías...</p>";
 
@@ -36,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     categoriesContainer.innerHTML = "<p class='text-muted'>No hay categorías para mostrar.</p>";
                     return;
                 }
-
+                // Recorre cada categoría y genera una tarjeta con sus imágenes
                 for (const [category, images] of Object.entries(data)) {
                     const col = document.createElement('div');
                     col.className = 'col-md-6 col-lg-4 mb-4';
@@ -63,7 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // Búsqueda de palabra
+    /**
+      * Evento de clic en el botón de búsqueda.
+      * Envía la palabra ingresada al backend y muestra la tarjeta con imagen, significado, categoría y botón de pronunciación.
+      */
     searchBtn.addEventListener('click', () => {
         const query = searchInput.value.trim();
         if (!query) {
@@ -71,9 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        categoriesContainer.innerHTML = ""; // Ocultar categorías
+        // Ocultar categorías al buscar y mostrar mensaje de carga
+        categoriesContainer.innerHTML = "";
         container.innerHTML = '<p class="text-muted">Buscando...</p>';
 
+        // Enviar la búsqueda al backend
         fetch('/dictionary/server/controller/Controller.php?action=searchWord', {
             method: 'POST',
             headers: {
@@ -84,13 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
         })
             .then(response => response.json())
             .then(data => {
-                container.innerHTML = ''; // Limpiar antes
+                container.innerHTML = ''; // Limpiar resultados anteriores
 
                 if (data.length === 0) {
                     container.innerHTML = '<p class="text-muted">No se encontraron resultados.</p>';
                     return;
                 }
 
+                // Mostrar cada palabra encontrada en una tarjeta
                 data.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'col-md-6 col-lg-4 mb-4';
@@ -99,7 +113,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="card h-100 shadow-sm">
                             ${item.image_url ? `<img src="${item.image_url}" class="card-img-top" alt="Imagen de ${item.word_in}">` : ''}
                             <div class="card-body">
-                                <h5 class="card-title">${item.word_in}</h5>
+                                <h5 class="card-title d-flex align-items-center justify-content-between">
+                                 <span>${item.word_in}</span>
+                                   <button class="btn btn-sm btn-outline-secondary" onclick="pronunciarPalabra('${item.word_in}')" title="Escuchar pronunciación">
+                                        <i class="bi bi-volume-up-fill"></i>
+                                       </button>
+                                 </h5>
                                 <p class="card-text"><strong>Significado:</strong> ${item.meaning}</p>
                                 <p class="card-text"><strong>Categoría:</strong> ${item.category}</p>
                             </div>
@@ -114,4 +133,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.innerHTML = '<p class="text-danger">Ocurrió un error al buscar.</p>';
             });
     });
+
 });
+/**
+ * Reproduce en voz alta la palabra recibida como texto.
+ * Si incluye notación fonética (ej: "house /haʊs/"), se elimina para que no afecte la pronunciación.
+ * @param {string} texto - Palabra completa que puede incluir notación fonética.
+ */
+function pronunciarPalabra(texto) {
+    const palabra = texto.split('/')[0].trim(); // Extrae solo la palabra, sin fonética
+    const mensaje = new SpeechSynthesisUtterance(palabra);
+    mensaje.lang = "en-GB";//Acento británico
+    window.speechSynthesis.speak(mensaje);
+}

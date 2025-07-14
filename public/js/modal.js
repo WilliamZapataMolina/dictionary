@@ -80,9 +80,9 @@ window.addEventListener("load", () => {
             btn.onclick = async () => {
                 const row = btn.closest("tr");
 
-                // 👇👇👇 PON TU BREAKPOINT AQUÍ 👇👇👇
+
                 formEdit.dataset.wordId = row.dataset.id;
-                // 👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆
+
                 formEdit.dataset.originalFile = row.dataset.fileId || "";
 
                 formEdit.word_in.value = row.dataset.word_in;
@@ -123,7 +123,7 @@ window.addEventListener("load", () => {
         const form = e.target;
 
         const fileIdSelect = form.querySelector("select[name='file_id']");
-        // <-- PON UN BREAKPOINT JUSTO EN LA LÍNEA SIGUIENTE
+
         console.log("🐛 Valor RAW de fileIdSelect.value al inicio del submit:", fileIdSelect.value);
         const wordId = form.dataset.wordId;
         const originalFileId = form.dataset.originalFile;

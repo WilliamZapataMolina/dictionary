@@ -1,26 +1,32 @@
 window.addEventListener("load", () => {
+    // Referencias al DOM
     const formAdd = document.getElementById("formAddWord");
     const tableWords = document.getElementById("tableWords");
     const categorySelect = formAdd.querySelector("select[name='category_id']");
 
+    // Inicializaciones generales
     cargarNavbarYFooter();
     cargarCategorias();
     cargarPalabras();
 
-    // INICIALIZAR SELECTOR DE IMÁGENES PARA FORMULARIO DE AGREGAR
+    // Inicializa el selector de imágenes (para el formulario de agregar)
     cargarSelectorDeImagenes({
         selector: document.getElementById("imageSelectorAdd"),
         preview: document.getElementById("imagePreviewAdd"),
         hiddenInput: formAdd.querySelector("input[name='image_url_path']")
     });
 
-    // ENVÍO DE FORMULARIO DE AGREGAR
+    /**
+     * Manejador del formulario de agregar nueva palabra.
+     * Recoge datos del formulario, los envía por POST y actualiza la tabla si todo va bien.
+     */
     formAdd.addEventListener("submit", async e => {
         e.preventDefault();
         const form = e.target;
         const formData = new FormData(form);
         const action = "addWord";
 
+        // Obtener y validar ruta de imagen seleccionada
         const rawPath = form.querySelector("input[name='image_url_path']")?.value;
         const path = rawPath?.trim();
 
@@ -36,6 +42,7 @@ window.addEventListener("load", () => {
             const data = await res.json();
             alert(data.message);
             if (data.success) {
+                // Limpiar formulario y recargar palabras
                 form.reset();
                 cargarPalabras();
                 cargarSelectorDeImagenes({
@@ -49,13 +56,24 @@ window.addEventListener("load", () => {
         }
     });
 
-    // FUNCIONES PARA CARGAR CONTENIDOS
+    // ===============================
+    // FUNCIONES PARA CARGAR CONTENIDO
+    // ===============================
+
+    /**
+     * Carga el contenido del navbar y footer desde archivos HTML externos.
+     */
 
     function cargarNavbarYFooter() {
         fetch("parts/navbar.html").then(r => r.text()).then(html => document.getElementById("navbar").innerHTML = html);
         fetch("parts/footer.html").then(r => r.text()).then(html => document.getElementById("footer").innerHTML = html);
     }
 
+    /**
+     * Carga las categorías disponibles desde la base de datos
+     * y las inserta como opciones en el formulario de agregar.
+     * @param {string} selectedId - ID de categoría a seleccionar por defecto (opcional)
+     */
     async function cargarCategorias(selectedId = "") {
         categorySelect.innerHTML = `<option value="">Seleccionar categoría</option>`;
 
@@ -79,6 +97,9 @@ window.addEventListener("load", () => {
         }
     }
 
+    /**
+     * Carga todas las palabras registradas y las muestra en una tabla HTML.
+     */
     function cargarPalabras() {
         fetch("../server/controller/Controller.php?action=getWord")
             .then(r => r.json())
@@ -87,7 +108,10 @@ window.addEventListener("load", () => {
                 else tableWords.innerHTML = "<p>Error al cargar palabras.</p>";
             });
     }
-
+    /**
+         * Renderiza la tabla con los datos de las palabras.
+         * @param {Array} words - Lista de palabras con sus propiedades.
+         */
     function renderizarTabla(words) {
         console.log("FILE_IDS en renderizarTabla:", words.map(w => w.file_id));
         if (!words.length) {
@@ -130,6 +154,9 @@ window.addEventListener("load", () => {
         document.dispatchEvent(new Event("wordsTableRendered"));
     }
 
+    /**
+     * Configura los botones "Eliminar" de cada fila para borrar una palabra.
+     */
     function setupDeleteButtons() {
         document.querySelectorAll(".btn-delete").forEach(btn => {
             btn.onclick = async () => {
@@ -148,6 +175,11 @@ window.addEventListener("load", () => {
         });
     }
 
+    /**
+     * Llena el selector de imágenes con los archivos disponibles en el sistema.
+     * También muestra una vista previa y actualiza un input oculto con la ruta seleccionada.
+     * @param {Object} opciones - Contiene selector, preview, hiddenInput y selectedPath opcional
+     */
     async function cargarSelectorDeImagenes({ selector, preview, hiddenInput, selectedPath = "" }) {
         selector.innerHTML = `<option value="">Seleccionar imagen...</option>`;
         preview.style.display = selectedPath ? "block" : "none";
@@ -178,7 +210,7 @@ window.addEventListener("load", () => {
         }
     }
 
-    // Exporto las funciones necesarias para modal.js
+    // Exportar funciones al global `window` para usarlas desde otros archivos (ej: modal.js)
     window.cargarCategorias = cargarCategorias;
     window.cargarSelectorDeImagenes = cargarSelectorDeImagenes;
     window.cargarPalabras = cargarPalabras;

@@ -1,5 +1,5 @@
 <?php
-
+// Requiere la conexión a la base de datos
 require_once __DIR__ . '/../daos/db.php';
 
 if (!function_exists('sendJson')) {
@@ -11,7 +11,11 @@ if (!function_exists('sendJson')) {
         exit;
     }
 }
-
+/**
+ * Clase que maneja la acción de obtener las categorías con imágenes asociadas.
+ * Esta acción devuelve un listado de categorías donde cada una contiene
+ * hasta 5 imágenes de palabras relacionadas.
+ */
 class ActionGetCategoriesWithImages
 {
     public function execute()
@@ -19,8 +23,11 @@ class ActionGetCategoriesWithImages
         $database = new DatabaseController();
         $db = $database->getConnection();
 
+        // Solo ejecuta si se pasó correctamente la acción por GET
         if (isset($_GET['action']) && $_GET['action'] === 'getCategoriesWithImages') {
             try {
+                // Consulta: obtiene nombre de categoría y ruta de imagen,
+                // uniendo las tablas categories, words y files.
                 $stmt = $db->prepare("
                     SELECT c.name AS category, f.path AS image_url
                     FROM categories c
@@ -34,6 +41,7 @@ class ActionGetCategoriesWithImages
 
                 $result = [];
 
+                // Agrupar resultados por categoría
                 foreach ($rows as $row) {
                     $cat = $row['category'];
                     if (!isset($result[$cat])) {
@@ -44,7 +52,7 @@ class ActionGetCategoriesWithImages
                         $result[$cat][] = $row['image_url'];
                     }
                 }
-
+                // Devolver el JSON con las categorías y sus imágenes
                 echo json_encode($result);
             } catch (PDOException $e) {
                 http_response_code(500);
