@@ -131,7 +131,7 @@ window.addEventListener("load", () => {
         // 1. Obtener el valor actual del select. Convertir 'undefined' o null a cadena vacía.
         // Esto es CLAVE para evitar que la cadena "undefined" llegue más allá.
         let finalFileIdToSend = fileIdSelect.value ?? "";
-        // 👆👆👆 ¡CAMBIO AQUÍ! Añadimos ?? "" 👆👆👆
+
 
         // 2. Lógica para determinar el file_id final a enviar:
         // Si el valor actual del select es "" (opción "Seleccionar imagen") Y la palabra tenía una imagen original,

@@ -1,0 +1,63 @@
+
+---------------------------------Esquema o diagrama de la aplicación dictionary--------------------------------------
+
+dictionary/
+│
+├── server/
+│   ├── controller/
+│   │   ├── ActionAddWord.php
+│   │   ├── ActionCountWordsWithImages.php
+│   │   ├── ActionDelete.php
+│	│	├── ActionGetCategories.php
+│   │   ├── ActionGetCategoriesWithImages.php
+│   │   ├── ActionGetImagesFromDatabase.php
+│   │   ├── ActionGetImagesFromFilesSystem.php
+│   │   ├── ActionGetWord.php
+│   │   ├── ActionLogin.php
+│   │   ├── ActionLogout.php
+│   │   ├── ActionSearchWord.php              
+│   │   ├── ActionUpdateWord.php 
+│   │   ├── authStatus.php
+│   │   └── Controller.php
+│   │
+│   └── daos/
+│       ├── db.php
+│       └── FileModel.php
+│
+├── public/
+    ├── adminPanel.php
+    ├── dictionary.html
+    ├── index.html
+    ├── login.php
+    ├── modal.php
+    │
+    ├── images/
+    │   ├── airport/
+    │   ├── animals/
+    │   ├── animalsFly/
+    │   └── ... (otras categorías)
+    │
+    ├── js/
+    │   ├── admin.js            ✅ (CRUD de palabras)
+    │   ├── dictionary.js       ✅ (búsqueda por palabra)
+    │   ├── include.js          ✅ (navbar/footer y estado de sesión)
+    │   └── modal.js            ✅ (ventana emergente para hacer el CRUD)
+    │
+    ├── css/
+    │   └── styles.css
+    │
+    ├── parts/
+    │   ├── footer.html
+    │   └── navbar.html
+    │
+    └── thirdParty/
+        └── bootstrap-5.3.3-dist/
+            ├── css/
+            │   └── bootstrap.min.css
+            └── js/
+               └── bootstrap.bundle.min.js
+
+ 
+ 
+   
+ 
